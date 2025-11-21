@@ -1,0 +1,22 @@
+{
+    "name": "messenger-bot",
+    "version": "1.0.0",
+    "description": "A simple Facebook Messenger bot with rewards system",
+    "main": "app.js",
+    "scripts": {
+      "start": "node app.js"
+    },
+    "dependencies": {
+      "express": "^4.17.1",
+      "body-parser": "^1.19.0",
+      "request": "^2.88.2",
+      "dotenv": "^8.2.0",
+      "mysql2": "^3.6.5",
+      "uuid": "^9.0.0",
+      "googleapis": "^129.0.0"
+    },
+    "engines": {
+      "node": "12.x"
+    },
+    "license": "MIT"
+  }
