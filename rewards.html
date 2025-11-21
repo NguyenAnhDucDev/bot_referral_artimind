@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rewards Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f6fb;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --success: #16a34a;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      background: radial-gradient(circle at top, #eef2ff, #f8fafc 45%);
+      color: var(--text);
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+      margin-bottom: 24px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      font-weight: 700;
+    }
+    .subheading {
+      margin: 0 0 24px;
+      color: var(--muted);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      background: #f8fafc;
+    }
+    .stat-label {
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .stat-value {
+      font-size: 30px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .filter-group {
+      display: flex;
+      gap: 12px;
+      flex: 2;
+      min-width: 240px;
+    }
+    input, select {
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      width: 100%;
+      background: #fff;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--card-bg);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead {
+      background: #edf2ff;
+    }
+    th, td {
+      padding: 14px 18px;
+      text-align: left;
+    }
+    th {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    td {
+      border-top: 1px solid var(--border);
+      vertical-align: top;
+    }
+    td a {
+      color: var(--primary);
+      word-break: break-word;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .badge.success { background: #dcfce7; color: #15803d; }
+    .badge.warning { background: #fef9c3; color: #854d0e; }
+    .badge.neutral { background: #e2e8f0; color: #475569; }
+    .adjust-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .adjust-chip {
+      background: #e0f2fe;
+      color: #0369a1;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .reward-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .reward-btn:hover { transform: translateY(-1px); }
+    .reward-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+      font-style: italic;
+    }
+    @media (max-width: 768px) {
+      body { padding: 20px 12px; }
+      .toolbar { flex-direction: column; }
+      .filter-group { flex-direction: column; }
+      th, td { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Rewards Dashboard</h1>
+      <p class="subheading">Manage referral performance like a database console with filtering, search, and real-time stats.</p>
+      <div class="stats-grid" id="stats-grid">
+        <!-- stats -->
+      </div>
+      <div class="toolbar">
+        <div class="filter-group">
+          <input type="text" id="search-input" placeholder="Search PSID or Adjust ID..." />
+          <select id="filter-select">
+            <option value="all">All statuses</option>
+            <option value="downloads">Downloads > 0</option>
+            <option value="subscribes">Subscribes > 0</option>
+            <option value="pending">No activity yet</option>
+          </select>
+        </div>
+        <button id="refresh-btn" class="reward-btn" style="background: var(--primary);">Refresh Data</button>
+      </div>
+    </div>
+    <div class="card">
+      <div id="content"></div>
+    </div>
+  </div>
+
+  <script>
+    const rootStyles = getComputedStyle(document.documentElement);
+    const varSuccess = rootStyles.getPropertyValue('--success').trim();
+    const varDanger = rootStyles.getPropertyValue('--danger').trim();
+    const varPrimary = rootStyles.getPropertyValue('--primary').trim();
+    let referralCache = [];
+
+    async function fetchReferrals() {
+      const res = await fetch('/api/referrals');
+      if (!res.ok) throw new Error('Failed to load referrals');
+      return res.json();
+    }
+
+    async function distributeReward(psid, referralLink, button) {
+      button.disabled = true;
+      button.innerText = 'Sending...';
+      try {
+        const res = await fetch('/api/send-reward', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            psid,
+            referral_link: referralLink,
+            reward_message: '🎉 Congratulations! You\'ve earned a reward for sharing your referral link: ' + referralLink + '\n\nThank you for helping us grow!'
+          })
+        });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Failed to send reward');
+        button.innerText = 'Sent!';
+        button.style.background = varSuccess;
+      } catch (error) {
+        console.error(error);
+        button.innerText = 'Error';
+        button.style.background = varDanger;
+        alert('Error sending reward: ' + error.message);
+      } finally {
+        setTimeout(() => {
+          button.disabled = false;
+          button.innerText = 'Send Reward';
+          button.style.background = varPrimary;
+        }, 2500);
+      }
+    }
+
+    function renderStats(referrals) {
+      const totalDownloads = referrals.reduce((sum, r) => sum + (r.referral_count_dowload || 0), 0);
+      const totalSubs = referrals.reduce((sum, r) => sum + (r.referral_count_sub || 0), 0);
+      const active = referrals.filter(r => (r.referral_count_dowload || 0) + (r.referral_count_sub || 0) > 0).length;
+
+      document.getElementById('stats-grid').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value">
+            ${referrals.length}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Users</div>
+          <div class="stat-value">${active}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Downloads</div>
+          <div class="stat-value">${totalDownloads}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Subscribes</div>
+          <div class="stat-value">${totalSubs}</div>
+        </div>`;
+    }
+
+    function renderAdjustChips(list) {
+      if (!list || !list.length) {
+        return '<span class="badge neutral">0</span>';
+      }
+      return `<div class="adjust-list">${list.map(id => `<span class="adjust-chip">${id}</span>`).join('')}</div>`;
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const filter = document.getElementById('filter-select').value;
+      return referralCache.filter(user => {
+        const downloadIds = (user.adjust_id_user_refer_download || []).join(' ').toLowerCase();
+        const subIds = (user.adjust_id_user_refer_sub || []).join(' ').toLowerCase();
+        const matchesSearch = (user.PSID || '').toLowerCase().includes(q) ||
+          downloadIds.includes(q) ||
+          subIds.includes(q);
+        let matchesFilter = true;
+        const downloads = user.referral_count_dowload || 0;
+        const subs = user.referral_count_sub || 0;
+        if (filter === 'downloads') matchesFilter = downloads > 0;
+        if (filter === 'subscribes') matchesFilter = subs > 0;
+        if (filter === 'pending') matchesFilter = downloads + subs === 0;
+        return matchesSearch && matchesFilter;
+      });
+    }
+
+    function renderTable() {
+      const contentEl = document.getElementById('content');
+      if (!referralCache.length) {
+        renderStats([]);
+        contentEl.innerHTML = '<div class="no-data">No users have generated referral links yet.</div>';
+        return;
+      }
+
+      renderStats(referralCache);
+      const filtered = applyFilters();
+      if (!filtered.length) {
+        contentEl.innerHTML = '<div class="no-data">No rows match your filters.</div>';
+        return;
+      }
+
+      const rows = filtered.map((user, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${user.PSID}</td>
+          <td><a href="${user.referral_link}" target="_blank">${user.referral_link}</a></td>
+          <td><span class="badge ${user.referral_count_dowload ? 'success' : 'neutral'}">${user.referral_count_dowload || 0}</span></td>
+          <td><span class="badge ${user.referral_count_sub ? 'success' : 'neutral'}">${user.referral_count_sub || 0}</span></td>
+          <td>${renderAdjustChips(user.adjust_id_user_refer_download)}</td>
+          <td>${renderAdjustChips(user.adjust_id_user_refer_sub)}</td>
+          <td>
+            ${new Date(user.created_at).toLocaleString()}<br>
+            <span style="font-size:12px;color:var(--muted)">Updated: ${new Date(user.updated_at).toLocaleString()}</span>
+          </td>
+          <td>
+            <button class="reward-btn" onclick="distributeReward('${user.PSID}', '${user.referral_link}', this)">Send Reward</button>
+          </td>
+        </tr>`).join('');
+
+      contentEl.innerHTML = `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>PSID</th>
+                <th>Referral Link</th>
+                <th>Downloads</th>
+                <th>Subscribes</th>
+                <th>Adjust IDs (Download)</th>
+                <th>Adjust IDs (Subscribe)</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    async function init(refresh = true) {
+      if (refresh) {
+        referralCache = await fetchReferrals();
+      }
+      renderTable();
+    }
+
+    document.getElementById('refresh-btn').addEventListener('click', () => init(true));
+    document.getElementById('search-input').addEventListener('input', () => renderTable());
+    document.getElementById('filter-select').addEventListener('change', () => renderTable());
+
+    init(true);
+  </script>
+</body>
+</html>
